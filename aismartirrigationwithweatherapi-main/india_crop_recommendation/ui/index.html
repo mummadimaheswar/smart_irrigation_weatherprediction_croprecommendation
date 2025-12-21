@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>India Crop Recommendation System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#16a34a',
+                        secondary: '#15803d',
+                        grok: '#1d9bf0',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .sensor-input::-webkit-inner-spin-button,
+        .sensor-input::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .sensor-input {
+            -moz-appearance: textfield;
+        }
+        /* Chatbot styles */
+        .chat-container {
+            height: calc(100vh - 200px);
+            max-height: 600px;
+        }
+        .chat-messages {
+            height: calc(100% - 80px);
+            overflow-y: auto;
+        }
+        .chat-bubble-user {
+            background: linear-gradient(135deg, #16a34a, #15803d);
+        }
+        .chat-bubble-ai {
+            background: linear-gradient(135deg, #1d9bf0, #0d8bd9);
+        }
+        .chat-bubble-ai p { margin-bottom: 0.5rem; }
+        .chat-bubble-ai ul { list-style: disc; margin-left: 1rem; }
+        .chat-bubble-ai li { margin-bottom: 0.25rem; }
+        .typing-indicator span {
+            animation: blink 1.4s infinite both;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes blink {
+            0%, 80%, 100% { opacity: 0; }
+            40% { opacity: 1; }
+        }
+        /* Slide panel */
+        .chat-panel {
+            transition: transform 0.3s ease-in-out;
+        }
+        .chat-panel.closed {
+            transform: translateX(100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-primary text-white shadow-lg">
+        <div class="container mx-auto px-4 py-6">
+            <h1 class="text-3xl font-bold">🌾 India Crop Recommendation System</h1>
+            <p class="text-green-100 mt-2">AI-powered crop recommendations with manual sensor data entry (CSV Dataset Mode)</p>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        <div class="grid lg:grid-cols-3 gap-8">
+            <!-- Location & Basic Info -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">📍 Location & Weather</h2>
+                
+                <form id="recommendForm" class="space-y-4">
+                    <!-- State -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">State *</label>
+                        <select id="state" required onchange="loadSampleDataForState()"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                            <option value="">Select State</option>
+                            <option value="Andhra Pradesh">Andhra Pradesh</option>
+                            <option value="Gujarat">Gujarat</option>
+                            <option value="Himachal Pradesh">Himachal Pradesh</option>
+                            <option value="Maharashtra">Maharashtra</option>
+                            <option value="Punjab">Punjab</option>
+                            <option value="Rajasthan">Rajasthan</option>
+                            <option value="Tamil Nadu">Tamil Nadu</option>
+                            <option value="Telangana">Telangana</option>
+                            <option value="Uttar Pradesh">Uttar Pradesh</option>
+                            <option value="Uttarakhand">Uttarakhand</option>
+                            <option value="West Bengal">West Bengal</option>
+                        </select>
+                    </div>
+
+                    <!-- District -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">District</label>
+                        <input type="text" id="district" placeholder="e.g., Pune"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                    </div>
+
+                    <!-- Date -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                        <input type="date" id="date"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                    </div>
+
+                    <!-- Temperature -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Temperature (°C)</label>
+                        <input type="number" id="temperature" placeholder="e.g., 28" min="0" max="50" step="0.1"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                    </div>
+
+                    <!-- Rainfall -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Expected Rainfall (mm)</label>
+                        <input type="number" id="rainfall" placeholder="e.g., 100" min="0" step="0.1"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                    </div>
+
+                    <!-- Humidity -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Humidity (%)</label>
+                        <input type="number" id="humidity" placeholder="e.g., 65" min="0" max="100" step="1"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                    </div>
+
+                    <!-- Irrigation -->
+                    <div class="flex items-center">
+                        <input type="checkbox" id="irrigation" checked
+                            class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                        <label for="irrigation" class="ml-2 text-sm text-gray-700">Irrigation Available</label>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Sensor Readings (20 inputs) -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-gray-800">💧 Soil Moisture (20 Sensors)</h2>
+                    <button type="button" onclick="fillRandomValues()" 
+                        class="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded">
+                        🎲 Random
+                    </button>
+                </div>
+                
+                <p class="text-sm text-gray-600 mb-4">
+                    Enter soil moisture % from 20 sensor locations at 15cm depth (from CSV data or manual entry).
+                </p>
+
+                <div id="sensorInputs" class="grid grid-cols-4 gap-2 mb-4">
+                    <!-- Will be generated by JS -->
+                </div>
+
+                <!-- Bulk actions -->
+                <div class="border-t pt-4 mt-4 space-y-3">
+                    <div class="flex gap-2">
+                        <input type="number" id="bulkValue" placeholder="Set all to..." min="0" max="100" step="0.1"
+                            class="flex-1 px-2 py-1 text-sm border border-gray-300 rounded">
+                        <button type="button" onclick="setAllSensors()" 
+                            class="bg-gray-500 hover:bg-gray-600 text-white text-sm px-3 py-1 rounded">
+                            Apply All
+                        </button>
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        <button type="button" onclick="clearAllSensors()" 
+                            class="flex-1 bg-red-100 hover:bg-red-200 text-red-700 text-sm px-3 py-1 rounded">
+                            Clear All
+                        </button>
+                        <button type="button" onclick="loadSampleDataForState()" 
+                            class="flex-1 bg-blue-100 hover:bg-blue-200 text-blue-700 text-sm px-3 py-1 rounded">
+                            📁 Load Sample
+                        </button>
+                    </div>
+
+                    <!-- Statistics -->
+                    <div class="bg-gray-50 rounded p-3 text-sm">
+                        <div class="grid grid-cols-3 gap-2 text-center">
+                            <div>
+                                <div class="text-gray-500">Average</div>
+                                <div id="avgMoisture" class="font-bold text-primary">--</div>
+                            </div>
+                            <div>
+                                <div class="text-gray-500">Min</div>
+                                <div id="minMoisture" class="font-bold text-orange-500">--</div>
+                            </div>
+                            <div>
+                                <div class="text-gray-500">Max</div>
+                                <div id="maxMoisture" class="font-bold text-blue-500">--</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="button" onclick="getRecommendations()"
+                    class="w-full mt-4 bg-primary hover:bg-secondary text-white font-semibold py-3 px-4 rounded-md transition duration-200">
+                    🔍 Get Crop Recommendations
+                </button>
+            </div>
+
+            <!-- Results -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">🌱 Recommendations</h2>
+                
+                <div id="loading" class="hidden">
+                    <div class="flex items-center justify-center py-8">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                        <span class="ml-3 text-gray-600">Analyzing sensor data...</span>
+                    </div>
+                </div>
+
+                <div id="results" class="hidden space-y-4">
+                    <!-- Results will be inserted here -->
+                </div>
+
+                <div id="placeholder" class="text-center py-12 text-gray-500">
+                    <p class="text-5xl mb-4">🌾</p>
+                    <p>Enter 20 sensor readings and location details</p>
+                    <p class="text-sm mt-2">Then click "Get Crop Recommendations"</p>
+                </div>
+
+                <div id="error" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Cards -->
+        <div class="grid md:grid-cols-4 gap-6 mt-8">
+            <div class="bg-white rounded-lg shadow-md p-5">
+                <h3 class="font-semibold text-gray-800 mb-2">📊 20 Sensor Points</h3>
+                <p class="text-gray-600 text-sm">Manual entry of soil moisture from 20 locations (simulating field sensors).</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-5">
+                <h3 class="font-semibold text-gray-800 mb-2">💧 15cm Depth</h3>
+                <p class="text-gray-600 text-sm">Readings at 15cm depth matching your CSV dataset format.</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-5">
+                <h3 class="font-semibold text-gray-800 mb-2">🌡️ Weather Aware</h3>
+                <p class="text-gray-600 text-sm">Combines sensor data with weather for accurate recommendations.</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-5">
+                <h3 class="font-semibold text-gray-800 mb-2">📁 CSV Dataset</h3>
+                <p class="text-gray-600 text-sm">Uses state-wise soil moisture data from 2020 datasets.</p>
+            </div>
+        </div>
+
+        <!-- API Configuration Section -->
+        <div class="bg-white rounded-lg shadow-md p-6 mt-8">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-semibold text-gray-800">🔑 API Configuration</h2>
+                <button onclick="toggleApiSettings()" id="apiSettingsToggle" 
+                    class="text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-full">
+                    <span id="apiToggleText">Show Settings</span> ▼
+                </button>
+            </div>
+            
+            <div id="apiSettingsPanel" class="hidden">
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- Grok API Key -->
+                    <div class="border rounded-lg p-4 bg-gradient-to-r from-blue-50 to-blue-100">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="text-2xl">🤖</span>
+                            <div>
+                                <h3 class="font-semibold text-gray-800">Grok AI (xAI)</h3>
+                                <p class="text-xs text-gray-500">For AI chatbot conversations</p>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <input type="password" id="grokApiKey" placeholder="Enter Grok API Key"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-grok text-sm"
+                                onchange="saveApiKey('grok')">
+                            <div class="flex gap-2">
+                                <button onclick="toggleKeyVisibility('grokApiKey')" 
+                                    class="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded">👁️ Show</button>
+                                <button onclick="testGrokApi()" 
+                                    class="text-xs bg-grok hover:bg-blue-600 text-white px-2 py-1 rounded">🧪 Test</button>
+                                <button onclick="clearApiKey('grok')" 
+                                    class="text-xs bg-red-100 hover:bg-red-200 text-red-600 px-2 py-1 rounded">🗑️ Clear</button>
+                            </div>
+                            <p class="text-xs text-gray-500">Get key: <a href="https://console.x.ai/" target="_blank" class="text-grok underline">console.x.ai</a></p>
+                            <div id="grokStatus" class="text-xs"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Weather API Key -->
+                    <div class="border rounded-lg p-4 bg-gradient-to-r from-orange-50 to-yellow-100">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="text-2xl">🌤️</span>
+                            <div>
+                                <h3 class="font-semibold text-gray-800">OpenWeatherMap</h3>
+                                <p class="text-xs text-gray-500">For live weather data</p>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <input type="password" id="weatherApiKey" placeholder="Enter OpenWeatherMap API Key"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm"
+                                onchange="saveApiKey('weather')">
+                            <div class="flex gap-2">
+                                <button onclick="toggleKeyVisibility('weatherApiKey')" 
+                                    class="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded">👁️ Show</button>
+                                <button onclick="testWeatherApi()" 
+                                    class="text-xs bg-orange-500 hover:bg-orange-600 text-white px-2 py-1 rounded">🧪 Test</button>
+                                <button onclick="clearApiKey('weather')" 
+                                    class="text-xs bg-red-100 hover:bg-red-200 text-red-600 px-2 py-1 rounded">🗑️ Clear</button>
+                            </div>
+                            <p class="text-xs text-gray-500">Get key: <a href="https://openweathermap.org/api" target="_blank" class="text-orange-600 underline">openweathermap.org</a></p>
+                            <div id="weatherStatus" class="text-xs"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4 p-3 bg-gray-50 rounded-lg">
+                    <p class="text-xs text-gray-600">
+                        <strong>🔒 Security Note:</strong> API keys are stored in your browser's localStorage only. 
+                        They are sent to the backend API for requests but never shared externally. 
+                        Clear your browser data to remove stored keys.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Source Info -->
+        <div class="bg-blue-50 rounded-lg p-4 mt-8">
+            <h3 class="font-semibold text-blue-800 mb-2">📁 Available State CSV Datasets (states.csv folder)</h3>
+            <div class="flex flex-wrap gap-2 text-sm">
+                <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded">sm_Andhrapradesh_2020.csv</span>
+                <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded">sm_Gujarat_2020.csv</span>
+                <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded">sm_himachalPradesh_2020.csv</span>
+                <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded">sm_Maharashtra_2020.csv</span>
+                <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded">sm_Punjab_2020.csv</span>
+                <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded">sm_rajasthan_2020.csv</span>
+                <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded">sm_Tamilnadu_2020.csv</span>
+                <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded">sm_Telangana_2020.csv</span>
+                <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded">sm_UttarPradesh_2020.csv</span>
+                <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded">sm_Uttarakhand_2020.csv</span>
+                <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded">sm_Westbengal_2020.csv</span>
+            </div>
+            <p class="text-xs text-blue-600 mt-2">CSV columns: Date, State Name, DistrictName, Average Soilmoisture Level (at 15cm), Volume Soilmoisture percentage (at 15cm)</p>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-gray-300 py-6 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <p>India Crop Recommendation System v1.0</p>
+            <p class="text-sm mt-2">Manual Sensor Data Entry Mode (CSV Dataset) | Built for Indian Agriculture 🇮🇳</p>
+        </div>
+    </footer>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+        const NUM_SENSORS = 20;
+
+        // ═══════════════════════════════════════════════════════════════════
+        // API KEY MANAGEMENT
+        // ═══════════════════════════════════════════════════════════════════
+        
+        // Load API keys from localStorage on page load
+        function loadApiKeys() {
+            const grokKey = localStorage.getItem('grokApiKey');
+            const weatherKey = localStorage.getItem('weatherApiKey');
+            
+            if (grokKey) {
+                document.getElementById('grokApiKey').value = grokKey;
+                updateKeyStatus('grok', 'saved', '✅ Key saved in browser');
+            }
+            if (weatherKey) {
+                document.getElementById('weatherApiKey').value = weatherKey;
+                updateKeyStatus('weather', 'saved', '✅ Key saved in browser');
+            }
+        }
+        
+        // Save API key to localStorage
+        function saveApiKey(type) {
+            const inputId = type === 'grok' ? 'grokApiKey' : 'weatherApiKey';
+            const key = document.getElementById(inputId).value.trim();
+            
+            if (key) {
+                localStorage.setItem(inputId, key);
+                updateKeyStatus(type, 'saved', '✅ Key saved to browser');
+            } else {
+                localStorage.removeItem(inputId);
+                updateKeyStatus(type, 'empty', '');
+            }
+        }
+        
+        // Clear API key
+        function clearApiKey(type) {
+            const inputId = type === 'grok' ? 'grokApiKey' : 'weatherApiKey';
+            document.getElementById(inputId).value = '';
+            localStorage.removeItem(inputId);
+            updateKeyStatus(type, 'cleared', '🗑️ Key cleared');
+            setTimeout(() => updateKeyStatus(type, 'empty', ''), 2000);
+        }
+        
+        // Update status display
+        function updateKeyStatus(type, status, message) {
+            const statusId = type === 'grok' ? 'grokStatus' : 'weatherStatus';
+            const statusEl = document.getElementById(statusId);
+            
+            const colors = {
+                'saved': 'text-green-600',
+                'error': 'text-red-600',
+                'testing': 'text-yellow-600',
+                'success': 'text-green-600',
+                'cleared': 'text-orange-600',
+                'empty': 'text-gray-400'
+            };
+            
+            statusEl.className = `text-xs ${colors[status] || 'text-gray-500'}`;
+            statusEl.textContent = message;
+        }
+        
+        // Toggle API key visibility
+        function toggleKeyVisibility(inputId) {
+            const input = document.getElementById(inputId);
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+        
+        // Toggle API settings panel
+        function toggleApiSettings() {
+            const panel = document.getElementById('apiSettingsPanel');
+            const toggleText = document.getElementById('apiToggleText');
+            
+            if (panel.classList.contains('hidden')) {
+                panel.classList.remove('hidden');
+                toggleText.textContent = 'Hide Settings';
+            } else {
+                panel.classList.add('hidden');
+                toggleText.textContent = 'Show Settings';
+            }
+        }
+        
+        // Test Grok API connection
+        async function testGrokApi() {
+            const key = document.getElementById('grokApiKey').value.trim();
+            if (!key) {
+                updateKeyStatus('grok', 'error', '❌ Enter API key first');
+                return;
+            }
+            
+            updateKeyStatus('grok', 'testing', '🔄 Testing connection...');
+            
+            try {
+                const response = await fetch(`${API_URL}/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: 'Hello, this is a test message.',
+                        context: {},
+                        api_key: key
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.response) {
+                        updateKeyStatus('grok', 'success', '✅ Grok API connected!');
+                        localStorage.setItem('grokApiKey', key);
+                    } else {
+                        updateKeyStatus('grok', 'error', '❌ Invalid response');
+                    }
+                } else {
+                    const err = await response.json();
+                    updateKeyStatus('grok', 'error', `❌ ${err.error || 'API error'}`);
+                }
+            } catch (err) {
+                updateKeyStatus('grok', 'error', '❌ Cannot connect to backend');
+            }
+        }
+        
+        // Test Weather API connection
+        async function testWeatherApi() {
+            const key = document.getElementById('weatherApiKey').value.trim();
+            if (!key) {
+                updateKeyStatus('weather', 'error', '❌ Enter API key first');
+                return;
+            }
+            
+            updateKeyStatus('weather', 'testing', '🔄 Testing connection...');
+            
+            try {
+                // Test with a known city (Delhi)
+                const response = await fetch(
+                    `https://api.openweathermap.org/data/2.5/weather?q=Delhi,IN&appid=${key}&units=metric`
+                );
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    updateKeyStatus('weather', 'success', `✅ Connected! Delhi: ${data.main.temp}°C`);
+                    localStorage.setItem('weatherApiKey', key);
+                } else if (response.status === 401) {
+                    updateKeyStatus('weather', 'error', '❌ Invalid API key');
+                } else {
+                    updateKeyStatus('weather', 'error', `❌ Error: ${response.status}`);
+                }
+            } catch (err) {
+                updateKeyStatus('weather', 'error', '❌ Network error');
+            }
+        }
+        
+        // Get stored API key
+        function getApiKey(type) {
+            const inputId = type === 'grok' ? 'grokApiKey' : 'weatherApiKey';
+            // First check input field, then localStorage
+            const inputVal = document.getElementById(inputId)?.value?.trim();
+            if (inputVal) return inputVal;
+            return localStorage.getItem(inputId) || '';
+        }
+
+        // Sample data from actual CSV files (Volume Soilmoisture percentage at 15cm)
+        const SAMPLE_DATA = {
+            "Maharashtra": [21.43, 11.54, 12.98, 19.20, 15.28, 19.04, 0.16, 9.01, 16.17, 18.23, 
+                           22.15, 14.67, 17.89, 20.45, 13.22, 18.90, 15.67, 21.34, 16.78, 19.56],
+            "Gujarat": [18.5, 15.2, 22.1, 19.8, 16.4, 20.3, 17.9, 14.6, 21.7, 18.2,
+                       15.8, 19.4, 16.9, 20.8, 17.3, 15.9, 21.2, 18.7, 16.1, 19.9],
+            "Punjab": [25.3, 28.1, 24.7, 26.9, 23.5, 27.4, 25.8, 29.2, 24.1, 26.3,
+                      28.7, 25.0, 27.1, 24.9, 26.5, 28.3, 25.6, 27.8, 24.4, 26.8],
+            "Rajasthan": [12.5, 10.2, 14.1, 11.8, 13.4, 9.3, 15.9, 11.6, 12.7, 10.2,
+                        13.8, 11.4, 14.9, 10.8, 12.3, 15.9, 11.2, 13.7, 10.1, 14.9],
+            "Tamil Nadu": [19.5, 22.2, 18.1, 21.8, 17.4, 23.3, 19.9, 20.6, 18.7, 22.2,
+                         17.8, 21.4, 18.9, 22.8, 19.3, 20.9, 18.2, 21.7, 19.1, 20.9],
+            "Andhra Pradesh": [20.5, 18.2, 22.1, 19.8, 21.4, 17.3, 23.9, 18.6, 20.7, 19.2,
+                              22.8, 17.4, 21.9, 18.8, 20.3, 22.9, 18.2, 21.7, 19.1, 20.9],
+            "Telangana": [18.5, 21.2, 17.1, 20.8, 16.4, 22.3, 18.9, 19.6, 17.7, 21.2,
+                        16.8, 20.4, 17.9, 21.8, 18.3, 19.9, 17.2, 20.7, 18.1, 19.9],
+            "Uttar Pradesh": [22.5, 25.2, 21.1, 24.8, 20.4, 26.3, 22.9, 23.6, 21.7, 25.2,
+                             20.8, 24.4, 21.9, 25.8, 22.3, 23.9, 21.2, 24.7, 22.1, 23.9],
+            "West Bengal": [28.5, 31.2, 27.1, 30.8, 26.4, 32.3, 28.9, 29.6, 27.7, 31.2,
+                           26.8, 30.4, 27.9, 31.8, 28.3, 29.9, 27.2, 30.7, 28.1, 29.9],
+            "Himachal Pradesh": [15.5, 18.2, 14.1, 17.8, 13.4, 19.3, 15.9, 16.6, 14.7, 18.2,
+                                13.8, 17.4, 14.9, 18.8, 15.3, 16.9, 14.2, 17.7, 15.1, 16.9],
+            "Uttarakhand": [16.5, 19.2, 15.1, 18.8, 14.4, 20.3, 16.9, 17.6, 15.7, 19.2,
+                          14.8, 18.4, 15.9, 19.8, 16.3, 17.9, 15.2, 18.7, 16.1, 17.9]
+        };
+
+        // Initialize sensor inputs
+        function initSensorInputs() {
+            const container = document.getElementById('sensorInputs');
+            
+            let html = '';
+            for (let i = 1; i <= NUM_SENSORS; i++) {
+                html += `
+                    <div class="relative">
+                        <label class="absolute -top-2 left-1 bg-white px-1 text-xs text-gray-500">S${i}</label>
+                        <input type="number" 
+                            id="sensor${i}" 
+                            class="sensor-input w-full px-2 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-primary"
+                            placeholder="%"
+                            min="0" 
+                            max="100" 
+                            step="0.01"
+                            onchange="updateStats()">
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        }
+
+        // Get all sensor values
+        function getSensorValues() {
+            const values = [];
+            for (let i = 1; i <= NUM_SENSORS; i++) {
+                const input = document.getElementById(`sensor${i}`);
+                const val = parseFloat(input.value);
+                if (!isNaN(val)) {
+                    values.push(val);
+                }
+            }
+            return values;
+        }
+
+        // Update statistics
+        function updateStats() {
+            const values = getSensorValues();
+            
+            if (values.length === 0) {
+                document.getElementById('avgMoisture').textContent = '--';
+                document.getElementById('minMoisture').textContent = '--';
+                document.getElementById('maxMoisture').textContent = '--';
+                return;
+            }
+
+            const avg = values.reduce((a, b) => a + b, 0) / values.length;
+            const min = Math.min(...values);
+            const max = Math.max(...values);
+
+            document.getElementById('avgMoisture').textContent = avg.toFixed(1) + '%';
+            document.getElementById('minMoisture').textContent = min.toFixed(1) + '%';
+            document.getElementById('maxMoisture').textContent = max.toFixed(1) + '%';
+        }
+
+        // Fill random values
+        function fillRandomValues() {
+            for (let i = 1; i <= NUM_SENSORS; i++) {
+                const val = (Math.random() * 30 + 10).toFixed(2); // 10-40%
+                document.getElementById(`sensor${i}`).value = val;
+            }
+            updateStats();
+        }
+
+        // Set all sensors to same value
+        function setAllSensors() {
+            const bulkVal = document.getElementById('bulkValue').value;
+            if (bulkVal) {
+                for (let i = 1; i <= NUM_SENSORS; i++) {
+                    document.getElementById(`sensor${i}`).value = bulkVal;
+                }
+                updateStats();
+            }
+        }
+
+        // Clear all sensors
+        function clearAllSensors() {
+            for (let i = 1; i <= NUM_SENSORS; i++) {
+                document.getElementById(`sensor${i}`).value = '';
+            }
+            updateStats();
+        }
+
+        // Load sample data based on selected state
+        function loadSampleDataForState() {
+            const state = document.getElementById('state').value;
+            if (!state) return;
+            
+            const data = SAMPLE_DATA[state] || SAMPLE_DATA["Maharashtra"];
+            
+            for (let i = 1; i <= NUM_SENSORS; i++) {
+                document.getElementById(`sensor${i}`).value = data[i-1].toFixed(2);
+            }
+            updateStats();
+        }
+
+        // Get recommendations
+        async function getRecommendations() {
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+            const placeholder = document.getElementById('placeholder');
+            const error = document.getElementById('error');
+
+            // Validate
+            const state = document.getElementById('state').value;
+            if (!state) {
+                alert('Please select a state');
+                return;
+            }
+
+            const sensorValues = getSensorValues();
+            if (sensorValues.length < 5) {
+                alert('Please enter at least 5 sensor readings');
+                return;
+            }
+
+            // Show loading
+            loading.classList.remove('hidden');
+            results.classList.add('hidden');
+            placeholder.classList.add('hidden');
+            error.classList.add('hidden');
+
+            // Prepare data
+            const avgMoisture = sensorValues.reduce((a, b) => a + b, 0) / sensorValues.length;
+            
+            const data = {
+                state: state,
+                district: document.getElementById('district').value || null,
+                date: document.getElementById('date').value || null,
+                soil_moisture_pct: avgMoisture,
+                temperature_c: document.getElementById('temperature').value ? parseFloat(document.getElementById('temperature').value) : null,
+                rainfall_mm: document.getElementById('rainfall').value ? parseFloat(document.getElementById('rainfall').value) : null,
+                humidity_pct: document.getElementById('humidity').value ? parseFloat(document.getElementById('humidity').value) : null,
+                irrigation_available: document.getElementById('irrigation').checked,
+                sensor_readings: sensorValues,
+                num_sensors: sensorValues.length
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/recommend`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                displayResults(result, sensorValues);
+            } catch (err) {
+                console.error('API Error:', err);
+                // Fallback to local calculation when API is not available
+                displayLocalResults(data, sensorValues);
+            } finally {
+                loading.classList.add('hidden');
+            }
+        }
+
+        // Local fallback calculation (works without API server)
+        function displayLocalResults(data, sensorValues) {
+            const avgMoisture = data.soil_moisture_pct;
+            const temp = data.temperature_c || 25;
+            const precip = data.rainfall_mm || 50;
+            const month = data.date ? new Date(data.date).getMonth() + 1 : new Date().getMonth() + 1;
+
+            // Rule-based recommendations
+            const crops = calculateCropScores(avgMoisture, temp, precip, month);
+            
+            const result = {
+                request_id: Math.random().toString(36).substr(2, 8),
+                timestamp: new Date().toISOString(),
+                location: { state: data.state, district: data.district || 'N/A' },
+                recommendations: crops.slice(0, 3),
+                weather_summary: {
+                    soil_moisture_pct: avgMoisture,
+                    temperature_c: temp,
+                    rainfall_mm: precip,
+                    season: getSeason(month)
+                },
+                model_version: "local_rule_based_v1 (offline)"
+            };
+
+            displayResults(result, sensorValues);
+        }
+
+        function getSeason(month) {
+            if (month >= 6 && month <= 10) return 'kharif';
+            if (month >= 10 || month <= 3) return 'rabi';
+            return 'zaid';
+        }
+
+        function calculateCropScores(sm, temp, precip, month) {
+            const CROP_RULES = {
+                "rice": {sm_min: 30, sm_max: 80, temp_min: 20, temp_max: 35, precip_min: 100, season: "kharif"},
+                "wheat": {sm_min: 20, sm_max: 50, temp_min: 10, temp_max: 25, precip_min: 40, season: "rabi"},
+                "maize": {sm_min: 25, sm_max: 60, temp_min: 18, temp_max: 32, precip_min: 50, season: "kharif"},
+                "cotton": {sm_min: 20, sm_max: 50, temp_min: 20, temp_max: 40, precip_min: 60, season: "kharif"},
+                "sugarcane": {sm_min: 40, sm_max: 70, temp_min: 20, temp_max: 35, precip_min: 150, season: "perennial"},
+                "groundnut": {sm_min: 20, sm_max: 45, temp_min: 25, temp_max: 35, precip_min: 50, season: "kharif"},
+                "soybean": {sm_min: 30, sm_max: 60, temp_min: 20, temp_max: 30, precip_min: 60, season: "kharif"},
+                "mustard": {sm_min: 15, sm_max: 40, temp_min: 10, temp_max: 25, precip_min: 25, season: "rabi"},
+                "chickpea": {sm_min: 15, sm_max: 35, temp_min: 15, temp_max: 30, precip_min: 30, season: "rabi"},
+                "potato": {sm_min: 25, sm_max: 50, temp_min: 15, temp_max: 25, precip_min: 40, season: "rabi"}
+            };
+
+            const currentSeason = getSeason(month);
+            const scores = [];
+
+            for (const [crop, rules] of Object.entries(CROP_RULES)) {
+                let score = 0;
+                
+                // Soil moisture (0-30)
+                if (sm >= rules.sm_min && sm <= rules.sm_max) {
+                    const mid = (rules.sm_min + rules.sm_max) / 2;
+                    const dist = Math.abs(sm - mid) / (rules.sm_max - rules.sm_min);
+                    score += 30 * (1 - dist);
+                }
+                
+                // Temperature (0-30)
+                if (temp >= rules.temp_min && temp <= rules.temp_max) {
+                    const mid = (rules.temp_min + rules.temp_max) / 2;
+                    const dist = Math.abs(temp - mid) / (rules.temp_max - rules.temp_min);
+                    score += 30 * (1 - dist);
+                }
+                
+                // Precipitation (0-20)
+                if (precip >= rules.precip_min) {
+                    score += 20;
+                } else {
+                    score += 20 * (precip / rules.precip_min);
+                }
+                
+                // Season (0-20)
+                if (rules.season === currentSeason || rules.season === 'perennial') {
+                    score += 20;
+                }
+
+                let notes = [];
+                if (sm < rules.sm_min) notes.push('Low soil moisture');
+                if (sm > rules.sm_max) notes.push('High soil moisture');
+                if (temp < rules.temp_min) notes.push('Temperature too low');
+                if (temp > rules.temp_max) notes.push('Temperature too high');
+                if (precip < rules.precip_min) notes.push('May need irrigation');
+
+                scores.push({
+                    crop: crop,
+                    confidence: score / 100,
+                    season: rules.season,
+                    notes: notes.length > 0 ? notes.join('; ') : 'Good conditions'
+                });
+            }
+
+            return scores.sort((a, b) => b.confidence - a.confidence);
+        }
+
+        function displayResults(data, sensorValues) {
+            const results = document.getElementById('results');
+            const placeholder = document.getElementById('placeholder');
+
+            placeholder.classList.add('hidden');
+            results.classList.remove('hidden');
+
+            const cropEmojis = {
+                'rice': '🌾', 'wheat': '🌾', 'maize': '🌽', 'cotton': '🧵',
+                'sugarcane': '🎋', 'groundnut': '🥜', 'soybean': '🫛',
+                'mustard': '💛', 'chickpea': '🫘', 'potato': '🥔'
+            };
+
+            // Sensor summary
+            const avg = sensorValues.reduce((a, b) => a + b, 0) / sensorValues.length;
+            const min = Math.min(...sensorValues);
+            const max = Math.max(...sensorValues);
+
+            let html = `
+                <div class="bg-gray-50 rounded-lg p-3 mb-4">
+                    <div class="text-sm font-medium text-gray-700 mb-2">📊 20 Sensor Analysis (${sensorValues.length} readings)</div>
+                    <div class="grid grid-cols-3 gap-2 text-center text-sm">
+                        <div class="bg-white rounded p-2">
+                            <div class="text-gray-500">Avg</div>
+                            <div class="font-bold text-primary">${avg.toFixed(1)}%</div>
+                        </div>
+                        <div class="bg-white rounded p-2">
+                            <div class="text-gray-500">Min</div>
+                            <div class="font-bold text-orange-500">${min.toFixed(1)}%</div>
+                        </div>
+                        <div class="bg-white rounded p-2">
+                            <div class="text-gray-500">Max</div>
+                            <div class="font-bold text-blue-500">${max.toFixed(1)}%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-sm text-gray-500 mb-4">
+                    📍 ${data.location.state}${data.location.district !== 'N/A' ? ', ' + data.location.district : ''}
+                    | Season: ${data.weather_summary?.season || 'N/A'}
+                </div>
+            `;
+
+            data.recommendations.forEach((rec, index) => {
+                const confidence = (rec.confidence * 100).toFixed(0);
+                const emoji = cropEmojis[rec.crop] || '🌱';
+                const bgColor = index === 0 ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200';
+                const badge = index === 0 ? '<span class="bg-green-500 text-white text-xs px-2 py-1 rounded-full ml-2">Best Match</span>' : '';
+
+                html += `
+                    <div class="border ${bgColor} rounded-lg p-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <span class="text-2xl mr-3">${emoji}</span>
+                                <div>
+                                    <h3 class="font-semibold text-gray-800 capitalize">${rec.crop} ${badge}</h3>
+                                    <p class="text-sm text-gray-500">Season: ${rec.season || 'N/A'}</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-2xl font-bold text-primary">${confidence}%</div>
+                                <div class="text-xs text-gray-500">confidence</div>
+                            </div>
+                        </div>
+                        ${rec.notes ? `<p class="text-sm text-gray-600 mt-2 border-t pt-2">💡 ${rec.notes}</p>` : ''}
+                    </div>
+                `;
+            });
+
+            html += `
+                <div class="text-xs text-gray-400 mt-4 text-center">
+                    Request ID: ${data.request_id} | Model: ${data.model_version}
+                </div>
+            `;
+
+            results.innerHTML = html;
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initSensorInputs();
+            document.getElementById('date').valueAsDate = new Date();
+            loadApiKeys();  // Load saved API keys
+            initChatbot();
+        });
+
+        // ═══════════════════════════════════════════════════════════════════
+        // GROK CHATBOT
+        // ═══════════════════════════════════════════════════════════════════
+        
+        let chatHistory = [];
+        
+        function initChatbot() {
+            const chatInput = document.getElementById('chatInput');
+            if (chatInput) {
+                chatInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendChatMessage();
+                    }
+                });
+            }
+            
+            // Add welcome message
+            addChatMessage('ai', `👋 Hello! I'm your AI farming assistant powered by Grok.
+
+I can help you with:
+• **Crop recommendations** for your region
+• **Soil & water management** advice
+• **Weather-based** farming decisions
+• **Seasonal planting** guidance
+
+Just ask me anything about Indian agriculture! You can also share your sensor data for more personalized advice.`);
+        }
+        
+        function toggleChat() {
+            const panel = document.getElementById('chatPanel');
+            const btn = document.getElementById('chatToggleBtn');
+            panel.classList.toggle('closed');
+            btn.classList.toggle('hidden');
+        }
+        
+        function addChatMessage(role, content) {
+            const container = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'} mb-3`;
+            
+            const bubble = document.createElement('div');
+            bubble.className = `max-w-[85%] px-4 py-3 rounded-2xl text-white text-sm ${
+                role === 'user' ? 'chat-bubble-user rounded-br-md' : 'chat-bubble-ai rounded-bl-md'
+            }`;
+            
+            if (role === 'ai') {
+                // Parse markdown for AI responses
+                bubble.innerHTML = marked.parse(content);
+            } else {
+                bubble.textContent = content;
+            }
+            
+            div.appendChild(bubble);
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+            
+            chatHistory.push({ role, content });
+        }
+        
+        function showTypingIndicator() {
+            const container = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.id = 'typingIndicator';
+            div.className = 'flex justify-start mb-3';
+            div.innerHTML = `
+                <div class="chat-bubble-ai px-4 py-3 rounded-2xl rounded-bl-md">
+                    <div class="typing-indicator flex gap-1">
+                        <span class="w-2 h-2 bg-white rounded-full"></span>
+                        <span class="w-2 h-2 bg-white rounded-full"></span>
+                        <span class="w-2 h-2 bg-white rounded-full"></span>
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function hideTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) indicator.remove();
+        }
+        
+        async function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message
+            addChatMessage('user', message);
+            input.value = '';
+            
+            // Show typing indicator
+            showTypingIndicator();
+            
+            // Gather context from the form
+            const context = gatherFormContext();
+            
+            // Get Grok API key from settings
+            const grokApiKey = getApiKey('grok');
+            
+            try {
+                const response = await fetch(`${API_URL}/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: message,
+                        api_key: grokApiKey || null,  // Pass the API key to backend
+                        ...context
+                    })
+                });
+                
+                const data = await response.json();
+                hideTypingIndicator();
+                
+                if (data.success && data.response) {
+                    addChatMessage('ai', data.response);
+                } else {
+                    addChatMessage('ai', `⚠️ ${data.error || 'Sorry, I encountered an error. Please try again.'}`);
+                }
+            } catch (err) {
+                hideTypingIndicator();
+                // Fallback to local response
+                const localResponse = generateLocalResponse(message, context);
+                addChatMessage('ai', localResponse);
+            }
+        }
+        
+        function gatherFormContext() {
+            const context = {};
+            
+            const state = document.getElementById('state')?.value;
+            if (state) context.state = state;
+            
+            const district = document.getElementById('district')?.value;
+            if (district) context.district = district;
+            
+            const temp = document.getElementById('temperature')?.value;
+            if (temp) context.temperature_c = parseFloat(temp);
+            
+            const rainfall = document.getElementById('rainfall')?.value;
+            if (rainfall) context.rainfall_mm = parseFloat(rainfall);
+            
+            const sensorValues = getSensorValues();
+            if (sensorValues.length > 0) {
+                context.sensor_readings = sensorValues;
+                context.soil_moisture_pct = sensorValues.reduce((a,b) => a+b, 0) / sensorValues.length;
+            }
+            
+            context.month = new Date().getMonth() + 1;
+            
+            return context;
+        }
+        
+        function generateLocalResponse(message, context) {
+            const msg = message.toLowerCase();
+            const state = context.state || 'your region';
+            const moisture = context.soil_moisture_pct;
+            const month = context.month || new Date().getMonth() + 1;
+            const season = month >= 6 && month <= 10 ? 'Kharif' : month >= 10 || month <= 3 ? 'Rabi' : 'Zaid';
+            
+            // Simple keyword matching for offline mode
+            if (msg.includes('recommend') || msg.includes('crop') || msg.includes('grow') || msg.includes('plant')) {
+                let crops = [];
+                if (season === 'Kharif') {
+                    crops = ['Rice', 'Cotton', 'Maize', 'Soybean', 'Groundnut'];
+                } else if (season === 'Rabi') {
+                    crops = ['Wheat', 'Mustard', 'Chickpea', 'Potato', 'Barley'];
+                } else {
+                    crops = ['Watermelon', 'Muskmelon', 'Cucumber', 'Vegetables'];
+                }
+                
+                let response = `Based on the current **${season} season** in **${state}**, here are my recommendations:\n\n`;
+                crops.forEach((crop, i) => {
+                    response += `${i+1}. **${crop}**\n`;
+                });
+                
+                if (moisture) {
+                    response += `\n💧 With soil moisture at ${moisture.toFixed(1)}%, `;
+                    if (moisture < 25) response += 'consider crops that need less water like millets or pulses.';
+                    else if (moisture > 50) response += 'water-loving crops like rice or sugarcane would thrive.';
+                    else response += 'most crops should do well.';
+                }
+                
+                return response;
+            }
+            
+            if (msg.includes('weather') || msg.includes('rain') || msg.includes('monsoon')) {
+                return `🌧️ For **${state}** weather guidance:\n\n` +
+                    `• Current season: **${season}**\n` +
+                    `• If expecting heavy rain, ensure proper drainage\n` +
+                    `• Light rain is ideal for sowing operations\n` +
+                    `• Monitor forecasts for timely irrigation decisions`;
+            }
+            
+            if (msg.includes('irrigation') || msg.includes('water')) {
+                return `💧 **Irrigation Tips for ${state}:**\n\n` +
+                    `• Morning irrigation (6-9 AM) reduces evaporation\n` +
+                    `• Drip irrigation saves 30-50% water\n` +
+                    `• Mulching helps retain soil moisture\n` +
+                    (moisture ? `• Current moisture: ${moisture.toFixed(1)}% - ${moisture < 30 ? 'consider irrigating soon' : 'levels look adequate'}` : '');
+            }
+            
+            if (msg.includes('soil') || msg.includes('moisture')) {
+                if (context.sensor_readings?.length) {
+                    const readings = context.sensor_readings;
+                    const avg = readings.reduce((a,b) => a+b, 0) / readings.length;
+                    return `📊 **Soil Analysis (${readings.length} sensors):**\n\n` +
+                        `• Average moisture: **${avg.toFixed(1)}%**\n` +
+                        `• Range: ${Math.min(...readings).toFixed(1)}% - ${Math.max(...readings).toFixed(1)}%\n` +
+                        `• ${avg < 25 ? '⚠️ Consider irrigation' : avg > 60 ? '⚠️ May need drainage' : '✅ Good moisture levels'}`;
+                }
+                return `💧 Please enter your sensor readings above to get soil moisture analysis!`;
+            }
+            
+            // Default helpful response
+            return `I'm your AI farming assistant! I can help with:\n\n` +
+                `• **"What crops should I grow?"** - Get recommendations\n` +
+                `• **"How's my soil moisture?"** - Analyze sensor data\n` +
+                `• **"Irrigation advice"** - Water management tips\n` +
+                `• **"Weather guidance"** - Seasonal advice\n\n` +
+                `_Note: For best results with Grok AI, ensure the API server is running and GROK_API_KEY is set._`;
+        }
+        
+        function clearChatHistory() {
+            const container = document.getElementById('chatMessages');
+            container.innerHTML = '';
+            chatHistory = [];
+            initChatbot();
+            
+            // Also clear on server
+            fetch(`${API_URL}/chat/clear`, { method: 'POST' }).catch(() => {});
+        }
+        
+        function sendQuickMessage(text) {
+            document.getElementById('chatInput').value = text;
+            sendChatMessage();
+        }
+    </script>
+
+    <!-- Floating Chat Button -->
+    <button id="chatToggleBtn" onclick="toggleChat()" 
+        class="fixed bottom-6 right-6 w-16 h-16 bg-grok hover:bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center z-50 transition-all hover:scale-110">
+        <span class="text-2xl">🤖</span>
+    </button>
+
+    <!-- Chat Panel (Sidebar) -->
+    <div id="chatPanel" class="chat-panel closed fixed right-0 top-0 h-full w-96 bg-white shadow-2xl z-50 flex flex-col">
+        <!-- Chat Header -->
+        <div class="bg-grok text-white px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <span class="text-2xl">🤖</span>
+                <div>
+                    <h3 class="font-bold">Grok AI Assistant</h3>
+                    <p class="text-xs text-blue-100">Powered by xAI</p>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="clearChatHistory()" class="p-2 hover:bg-blue-600 rounded" title="Clear chat">
+                    🗑️
+                </button>
+                <button onclick="toggleChat()" class="p-2 hover:bg-blue-600 rounded" title="Close">
+                    ✕
+                </button>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="px-3 py-2 bg-gray-50 border-b flex gap-2 overflow-x-auto">
+            <button onclick="sendQuickMessage('What crops should I grow?')" 
+                class="whitespace-nowrap text-xs bg-primary text-white px-3 py-1 rounded-full hover:bg-secondary">
+                🌾 Recommend Crops
+            </button>
+            <button onclick="sendQuickMessage('Analyze my soil moisture')" 
+                class="whitespace-nowrap text-xs bg-blue-500 text-white px-3 py-1 rounded-full hover:bg-blue-600">
+                💧 Soil Analysis
+            </button>
+            <button onclick="sendQuickMessage('Irrigation tips')" 
+                class="whitespace-nowrap text-xs bg-purple-500 text-white px-3 py-1 rounded-full hover:bg-purple-600">
+                🚿 Irrigation
+            </button>
+        </div>
+
+        <!-- Chat Messages -->
+        <div id="chatMessages" class="chat-messages flex-1 p-4 space-y-2 overflow-y-auto">
+            <!-- Messages will be added here -->
+        </div>
+
+        <!-- Chat Input -->
+        <div class="p-3 border-t bg-white">
+            <div class="flex gap-2">
+                <input type="text" id="chatInput" 
+                    placeholder="Ask about crops, soil, weather..."
+                    class="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-grok text-sm">
+                <button onclick="sendChatMessage()" 
+                    class="bg-grok hover:bg-blue-600 text-white px-4 py-2 rounded-full transition">
+                    ➤
+                </button>
+            </div>
+            <p class="text-xs text-gray-400 mt-2 text-center">
+                Press Enter to send • Context from form included
+            </p>
+        </div>
+    </div>
+</body>
+</html>

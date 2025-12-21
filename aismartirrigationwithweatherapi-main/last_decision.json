@@ -1,0 +1,11 @@
+{
+  "timestamp": "2025-12-04T06:37:11Z",
+  "decision": "Skip",
+  "reason": "Moisture adequate (42%).",
+  "soil_moisture": 0.4237631846,
+  "predicted_24h": 0.4137631846,
+  "rain_24h_mm": 1.6600000000000001,
+  "et0_mm_day": 1.6886445680991735,
+  "etc_mm_day": 1.6042123396942147,
+  "advisory": "Wheat prefers moderate moisture."
+}

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Smart To-Do List - Stay organized and productive">
+    <title>Smart To-Do List</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1><i class="fas fa-check-circle"></i> Smart To-Do List</h1>
+            <p class="subtitle">Stay organized, stay productive</p>
+        </header>
+
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-label">Total</span>
+                <span class="stat-value" id="totalTasks">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Active</span>
+                <span class="stat-value active" id="activeTasks">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Completed</span>
+                <span class="stat-value completed" id="completedTasks">0</span>
+            </div>
+        </div>
+
+        <!-- Add Task Form -->
+        <div class="add-task-container">
+            <form id="todoForm" class="todo-form">
+                <input 
+                    type="text" 
+                    id="taskInput" 
+                    class="task-input" 
+                    placeholder="Add a new task..."
+                    autocomplete="off"
+                    required
+                >
+                <select id="prioritySelect" class="priority-select">
+                    <option value="low">Low</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="high">High</option>
+                </select>
+                <button type="submit" class="btn-add">
+                    <i class="fas fa-plus"></i> Add Task
+                </button>
+            </form>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="filter-tabs">
+            <button class="filter-tab active" data-filter="all">
+                <i class="fas fa-list"></i> All
+            </button>
+            <button class="filter-tab" data-filter="active">
+                <i class="fas fa-circle"></i> Active
+            </button>
+            <button class="filter-tab" data-filter="completed">
+                <i class="fas fa-check-circle"></i> Completed
+            </button>
+            <button class="filter-tab" data-filter="high">
+                <i class="fas fa-exclamation-circle"></i> High Priority
+            </button>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-container">
+            <input 
+                type="text" 
+                id="searchInput" 
+                class="search-input" 
+                placeholder="Search tasks..."
+            >
+            <i class="fas fa-search search-icon"></i>
+        </div>
+
+        <!-- Tasks List -->
+        <div class="tasks-container">
+            <ul id="tasksList" class="tasks-list">
+                <!-- Tasks will be dynamically inserted here -->
+            </ul>
+            <div id="emptyState" class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <p>No tasks yet. Add one to get started!</p>
+            </div>
+        </div>
+
+        <!-- Actions Bar -->
+        <div class="actions-bar">
+            <button id="clearCompleted" class="btn-action">
+                <i class="fas fa-trash"></i> Clear Completed
+            </button>
+            <button id="clearAll" class="btn-action btn-danger">
+                <i class="fas fa-trash-alt"></i> Clear All
+            </button>
+            <button id="exportData" class="btn-action btn-export">
+                <i class="fas fa-download"></i> Export
+            </button>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Last updated: <span id="lastUpdated">Never</span></p>
+            <p class="credits">Made with <i class="fas fa-heart"></i> by mummadimaheswar</p>
+        </footer>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
