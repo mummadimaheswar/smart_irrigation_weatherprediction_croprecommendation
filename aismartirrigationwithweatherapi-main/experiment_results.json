@@ -1,0 +1,224 @@
+{
+  "experiments": [
+    {
+      "experiment": "Decision Distribution",
+      "total_samples": 300,
+      "decision_distribution": {
+        "execute": 59.66666666666667,
+        "skip": 25.666666666666664,
+        "defer": 14.666666666666666
+      },
+      "accuracy": 0.7833333333333333,
+      "avg_confidence": 0.8079009816692322,
+      "avg_consistency": 0.7813519507454229
+    },
+    {
+      "experiment": "Water Savings",
+      "baseline_water_mm": 3800.0,
+      "smart_water_mm": 4445.493546025534,
+      "savings_percent": -16.986672263829835,
+      "savings_by_crop": {
+        "wheat": {
+          "count": 50,
+          "execute_pct": 57.99999999999999,
+          "defer_pct": 22.0,
+          "skip_pct": 20.0,
+          "avg_confidence": 0.8001123899579801,
+          "avg_water_mm": 16.210308561845192
+        },
+        "rice": {
+          "count": 50,
+          "execute_pct": 84.0,
+          "defer_pct": 6.0,
+          "skip_pct": 10.0,
+          "avg_confidence": 0.8038852721457621,
+          "avg_water_mm": 31.794143884373256
+        },
+        "maize": {
+          "count": 50,
+          "execute_pct": 52.0,
+          "defer_pct": 12.0,
+          "skip_pct": 36.0,
+          "avg_confidence": 0.8080697442326534,
+          "avg_water_mm": 19.26655774785674
+        },
+        "cotton": {
+          "count": 50,
+          "execute_pct": 54.0,
+          "defer_pct": 18.0,
+          "skip_pct": 28.000000000000004,
+          "avg_confidence": 0.7987120730829007,
+          "avg_water_mm": 23.270451317576672
+        },
+        "sugarcane": {
+          "count": 50,
+          "execute_pct": 62.0,
+          "defer_pct": 14.000000000000002,
+          "skip_pct": 24.0,
+          "avg_confidence": 0.8191873209519082,
+          "avg_water_mm": 30.531043206745398
+        },
+        "soybean": {
+          "count": 50,
+          "execute_pct": 48.0,
+          "defer_pct": 16.0,
+          "skip_pct": 36.0,
+          "avg_confidence": 0.8174390896441893,
+          "avg_water_mm": 23.514397006683026
+        }
+      }
+    },
+    {
+      "experiment": "Response Time",
+      "mean_ms": 0.04726666336258253,
+      "median_ms": 0.04255003295838833,
+      "std_ms": 0.01857177956029653,
+      "p95_ms": 0.07692000363022089,
+      "p99_ms": 0.147333072964102,
+      "realtime_compliant_pct": 100.0
+    },
+    {
+      "experiment": "Consistency Validation",
+      "consistency_confidence_correlation": 0.5126811956168459,
+      "high_consistency_count": 285,
+      "low_consistency_count": 0,
+      "low_consistency_defer_rate": NaN
+    },
+    {
+      "experiment": "Crop-Specific Performance",
+      "results_by_crop": {
+        "wheat": {
+          "count": 50,
+          "execute_pct": 57.99999999999999,
+          "defer_pct": 22.0,
+          "skip_pct": 20.0,
+          "avg_confidence": 0.8001123899579801,
+          "avg_water_mm": 16.210308561845192
+        },
+        "rice": {
+          "count": 50,
+          "execute_pct": 84.0,
+          "defer_pct": 6.0,
+          "skip_pct": 10.0,
+          "avg_confidence": 0.8038852721457621,
+          "avg_water_mm": 31.794143884373256
+        },
+        "maize": {
+          "count": 50,
+          "execute_pct": 52.0,
+          "defer_pct": 12.0,
+          "skip_pct": 36.0,
+          "avg_confidence": 0.8080697442326534,
+          "avg_water_mm": 19.26655774785674
+        },
+        "cotton": {
+          "count": 50,
+          "execute_pct": 54.0,
+          "defer_pct": 18.0,
+          "skip_pct": 28.000000000000004,
+          "avg_confidence": 0.7987120730829007,
+          "avg_water_mm": 23.270451317576672
+        },
+        "sugarcane": {
+          "count": 50,
+          "execute_pct": 62.0,
+          "defer_pct": 14.000000000000002,
+          "skip_pct": 24.0,
+          "avg_confidence": 0.8191873209519082,
+          "avg_water_mm": 30.531043206745398
+        },
+        "soybean": {
+          "count": 50,
+          "execute_pct": 48.0,
+          "defer_pct": 16.0,
+          "skip_pct": 36.0,
+          "avg_confidence": 0.8174390896441893,
+          "avg_water_mm": 23.514397006683026
+        }
+      }
+    },
+    {
+      "experiment": "Regional Analysis",
+      "results_by_state": {
+        "MAHARASHTRA": {
+          "count": 60,
+          "execute_pct": 61.66666666666667,
+          "defer_pct": 13.333333333333334,
+          "skip_pct": 25.0,
+          "avg_confidence": 0.8086358234448363
+        },
+        "PUNJAB": {
+          "count": 60,
+          "execute_pct": 63.33333333333333,
+          "defer_pct": 10.0,
+          "skip_pct": 26.666666666666668,
+          "avg_confidence": 0.8152073382198781
+        },
+        "KARNATAKA": {
+          "count": 60,
+          "execute_pct": 56.666666666666664,
+          "defer_pct": 16.666666666666664,
+          "skip_pct": 26.666666666666668,
+          "avg_confidence": 0.805072632067153
+        },
+        "UTTAR PRADESH": {
+          "count": 60,
+          "execute_pct": 58.333333333333336,
+          "defer_pct": 18.333333333333332,
+          "skip_pct": 23.333333333333332,
+          "avg_confidence": 0.8109237128871503
+        },
+        "ASSAM": {
+          "count": 60,
+          "execute_pct": 58.333333333333336,
+          "defer_pct": 15.0,
+          "skip_pct": 26.666666666666668,
+          "avg_confidence": 0.7996654017271438
+        }
+      }
+    },
+    {
+      "experiment": "Edge Cases",
+      "results": [
+        {
+          "scenario": "Critical Drought",
+          "decision": "execute",
+          "confidence": 0.83525,
+          "reason": "Soil moisture 8% below critical 18%"
+        },
+        {
+          "scenario": "Flood Risk",
+          "decision": "execute",
+          "confidence": 0.8217500000000001,
+          "reason": "Rainfall forecast: 80.0 mm in 24h"
+        },
+        {
+          "scenario": "Frost Risk",
+          "decision": "override",
+          "confidence": 0.85925,
+          "reason": "Frost risk at 1.0\u00b0C"
+        },
+        {
+          "scenario": "Sensor Degraded",
+          "decision": "defer",
+          "confidence": 0.57875,
+          "reason": "Deferring irrigation - 5.0mm rain expected"
+        },
+        {
+          "scenario": "Conflicting Signals",
+          "decision": "execute",
+          "confidence": 0.77225,
+          "reason": "Rainfall forecast: 25.0 mm in 24h"
+        },
+        {
+          "scenario": "Optimal Conditions",
+          "decision": "execute",
+          "confidence": 0.8502500000000001,
+          "reason": "Critical growth stage (mid) requires optimal moisture"
+        }
+      ]
+    }
+  ],
+  "summary": "\n================================================================================\nEXPERIMENT RESULTS SUMMARY\n================================================================================\n\nTable 1: System Performance Metrics\n--------------------------------------------------------------------------------\nMetric                                   |           Value |       Unit\n--------------------------------------------------------------------------------\nDecision Accuracy                        |           78.3% |          %\nAverage Confidence Score                 |           80.8% |          %\nAverage Consistency Score                |           78.1% |          %\nWater Savings vs Baseline                |          -17.0% |          %\nMean Response Time                       |          0.047 |         ms\nP95 Response Time                        |          0.077 |         ms\nReal-time Compliance Rate                |          100.0% |          %\nConsistency-Confidence Correlation       |          0.513 |          r\n--------------------------------------------------------------------------------\n\nTable 2: Decision Distribution\n--------------------------------------------------------------------------------\nEXECUTE              |       59.7%\nDEFER                |       14.7%\nSKIP                 |       25.7%\n--------------------------------------------------------------------------------\n",
+  "timestamp": "2026-01-01T11:55:18.737732"
+}
